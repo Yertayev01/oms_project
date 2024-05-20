@@ -6,10 +6,6 @@ from typing import List
 
 router = APIRouter()
 
-OBJECTS_FOLDER = "C:/Users/USER/Desktop/anchorWorld_auth/objects"
-NODES_FOLDER = "C:/Users/USER/Desktop/anchorWorld_auth/nodes"
-QUEUE_FOLDER = "C:/Users/USER/Desktop/anchorWorld_auth/queue"
-RESULT_FOLDER = "C:/Users/USER/Desktop/anchorWorld_auth/video_results"
 
 @router.get("/anchorList", response_model=List[schemas.AnchorList])
 async def get_anchor_list(

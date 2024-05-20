@@ -25,6 +25,14 @@ class Settings(BaseSettings):
     swagger_username: str
     swagger_password: str
 
+    objects_folder: str
+    nodes_folder: str
+    queue_folder: str
+    result_folder: str
+    files_folder: str
+    video_folder: str
+    profile_image_folder: str
+
     # Define the Config inner class with the path to the environment file
     class Config:
         env_file = ".env"
@@ -36,17 +44,30 @@ settings = Settings(
     database_password="postgres",
     database_name="anchorworld",
     database_port="5432",
+    # database_username="admin",
+    # database_password="admin",
+    # database_port="3306",
+    # database_name="superswing",
+    # database_hostname="localhost",
     admin_username="admin",
     admin_password="admin",
     secret_key="cd67cdf09d9dc368960d7590e143b0d55c15f2d0da56b314b4a08a54aeca9b4b",
     jwt_algorithm="RS256",
-    access_token_expires_in=60,
-    refresh_token_expires_in=1000,
+    access_token_expires_in=1440,
+    refresh_token_expires_in=86400,
     #client_origin="*",
     jwt_private_key="LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlCT2dJQkFBSkJBSSs3QnZUS0FWdHVQYzEzbEFkVk94TlVmcWxzMm1SVmlQWlJyVFpjd3l4RVhVRGpNaFZuCi9KVHRsd3h2a281T0pBQ1k3dVE0T09wODdiM3NOU3ZNd2xNQ0F3RUFBUUpBYm5LaENOQ0dOSFZGaHJPQ0RCU0IKdmZ2ckRWUzVpZXAwd2h2SGlBUEdjeWV6bjd0U2RweUZ0NEU0QTNXT3VQOXhqenNjTFZyb1pzRmVMUWlqT1JhUwp3UUloQU84MWl2b21iVGhjRkltTFZPbU16Vk52TGxWTW02WE5iS3B4bGh4TlpUTmhBaUVBbWRISlpGM3haWFE0Cm15QnNCeEhLQ3JqOTF6bVFxU0E4bHUvT1ZNTDNSak1DSVFEbDJxOUdtN0lMbS85b0EyaCtXdnZabGxZUlJPR3oKT21lV2lEclR5MUxaUVFJZ2ZGYUlaUWxMU0tkWjJvdXF4MHdwOWVEejBEWklLVzVWaSt6czdMZHRDdUVDSUVGYwo3d21VZ3pPblpzbnU1clBsTDJjZldLTGhFbWwrUVFzOCtkMFBGdXlnCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0t",
     jwt_public_key="LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZ3d0RRWUpLb1pJaHZjTkFRRUJCUUFEU3dBd1NBSkJBSSs3QnZUS0FWdHVQYzEzbEFkVk94TlVmcWxzMm1SVgppUFpSclRaY3d5eEVYVURqTWhWbi9KVHRsd3h2a281T0pBQ1k3dVE0T09wODdiM3NOU3ZNd2xNQ0F3RUFBUT09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQ==",
     swagger_username="swagger_user",
-    swagger_password="swagger_password"
+    swagger_password="swagger_password",
+
+    objects_folder="C:/Users/USER/Desktop/anchorWorld_auth/objects",
+    nodes_folder="C:/Users/USER/Desktop/anchorWorld_auth/nodes",
+    queue_folder="C:/Users/USER/Desktop/anchorWorld_auth/queue",
+    result_folder="C:/Users/USER/Desktop/anchorWorld_auth/results",
+    files_folder="C:/Users/USER/Desktop/anchorWorld_auth/media_uploads",
+    video_folder="C:/Users/USER/Desktop/anchorWorld_auth/videos",
+    profile_image_folder="C:/Users/USER/Desktop/anchorWorld_auth/profile_image",
 )
 
 swagger_login_page = """

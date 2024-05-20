@@ -1,18 +1,9 @@
-# 1. check are you in .../fastapi or not => cd fastapi
-# 2. python -m venv venv
-# 3. pip install -r requirements.txt
-# 4  uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-
-
 # Import necessary modules from FastAPI and project-specific modules.
-from fastapi import FastAPI, HTTPException, Response, Depends, status
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
-from typing import List
 from .core import database, models, routers, config, utils, oauth2
-from .core.config import Settings
-from .core.database import engine, SessionLocal, get_db
+from .core.database import engine
 from fastapi.staticfiles import StaticFiles
 
 models.Base.metadata.create_all(bind=engine)
@@ -25,7 +16,7 @@ app = FastAPI()
 app.include_router(routers.router)
 
 # after engine setup need to change to /3d-ensults
-app.mount("/api/static", StaticFiles(directory="../video_results"), name="static")
+app.mount("/api/static", StaticFiles(directory="../results"), name="static")
 
 app.mount("/api/avatar", StaticFiles(directory="../profile_image"), name="avatar")
 

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.core import models, schemas, utils
+from sqlalchemy import func
 #from app.core.utils import hash_password
 
 #user
@@ -15,15 +16,26 @@ async def get_user_by_username(db: Session, username: str) -> models.User:
 async def get_users(db: Session) -> List[models.User]:
     return db.query(models.User).all()
 
+async def get_user_by_username(db: Session, username: str) -> models.User:
+    return db.query(models.User).filter(models.User.username == username).first()
+
+async def get_user_by_email(db: Session, email: str) -> models.User:
+    return db.query(models.User).filter(models.User.email == email).first()
+
 async def user_create(db: Session, user: schemas.UserCreate) -> models.User:
-    _user = await get_user_by_username(db, user.username)
-    if _user:
-        raise HTTPException(detail=f"Username {user.username} is already exist", status_code=status.HTTP_409_CONFLICT)
+    # Check if email exists
+    existing_email = await get_user_by_email(db, user.email)
+    if existing_email:
+        raise HTTPException(detail=f"Email {user.email} is already registered", status_code=status.HTTP_409_CONFLICT)
+
+    # Check if username exists
+    existing_username = await get_user_by_username(db, user.username)
+    if existing_username:
+        raise HTTPException(detail=f"Username {user.username} is already taken", status_code=status.HTTP_409_CONFLICT)
     
     user.password = await utils.hash_password(user.password)
     db_user = models.User(
         **user.dict(),
-        #url = user.profile_image_url
     )
     db.add(db_user)
     db.commit()
@@ -68,16 +80,27 @@ async def photo_create(db: Session, photo: schemas.PhotoCreate):
 
 #object
 async def get_object_by_id(db: Session, id: int):
-    return db.query(models.Object).filter(models.Object.id == id).first()
+    return db.query(models.Object).filter(
+        models.Object.id == id,
+        models.Object.conversion_status == '2'
+        ).first()
 
 async def get_objects(db: Session) -> List[models.Object]:
-    return db.query(models.Object).all()
+    return db.query(models.Object).filter(models.Object.conversion_status == '2').all()
 
-async def get_only_my_objects(db: Session, user_id) -> List[models.Object]:
-    return db.query(models.Object).filter(user_id == user_id).all()
+async def get_only_my_objects(db: Session, user_id: int, object_type: str) -> List[models.Object]:
+    return db.query(models.Object).filter(
+        models.Object.user_id == user_id,
+        models.Object.object_type == object_type,
+        models.Object.conversion_status == '2'
+    ).all()
 
-async def get_only_user_objects(db: Session, user_id) -> List[models.Object]:
-    return db.query(models.Object).filter(models.Object.user_id == user_id).all()
+async def get_only_user_objects(db: Session, user_id: int, object_type: str) -> List[models.Object]:
+    return db.query(models.Object).filter(
+        models.Object.object_type == object_type,
+        models.Object.conversion_status == '2',
+        models.Object.user_id != user_id
+    ).all()
 
 async def object_update(db: Session, id: int, user_id: int, object: schemas.ObjectUpdate) -> schemas.ObjectReturn:
     db_object = await get_object_by_id(db, id)
@@ -103,11 +126,11 @@ async def get_node_by_id(db: Session, id: int):
 async def get_nodes(db: Session) -> List[models.Node]:
     return db.query(models.Node).all()
 
-async def get_only_my_nodes(db: Session, user_id) -> List[models.Node]:
-    return db.query(models.Node).filter(user_id == user_id).all()
-
-async def get_only_user_nodes(db: Session, user_id) -> List[models.Node]:
+async def get_only_my_nodes(db: Session, user_id: int) -> List[models.Node]:
     return db.query(models.Node).filter(models.Node.user_id == user_id).all()
+
+async def get_only_user_nodes(db: Session, user_id: int) -> List[models.Node]:
+    return db.query(models.Node).filter(models.Node.user_id != user_id).all()
 
 async def node_update(db: Session, id: int, user_id: int, node: schemas.NodeUpdate) -> schemas.NodeReturn:
     db_node = await get_node_by_id(db, id)
@@ -126,13 +149,61 @@ async def node_update(db: Session, id: int, user_id: int, node: schemas.NodeUpda
     db.refresh(db_node)
     return db_node
 
+
+
+async def get_nodes_on_map(db: Session, latitude: float, longitude: float) -> List[dict]:
+    
+    import math
+
+    def calculate_distance(lat1, lon1, lat2, lon2):
+        R = 6371000  # Earth radius in meters
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2)
+        delta_phi = math.radians(lat2 - lat1)
+        delta_lambda = math.radians(lon2 - lon1)
+        a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
+    
+    nodes = db.query(models.Node).all()
+    nodes_with_distance = [
+        (node, calculate_distance(latitude, longitude, node.latitude, node.longitude))
+        for node in nodes
+    ]
+    nodes_with_distance.sort(key=lambda x: x[1])
+    return [{'node': node, 'distance': distance} for node, distance in nodes_with_distance]
+
 #video
 
+async def get_video_by_id(db: Session, id: int):
+    return db.query(models.Video).filter(models.Video.id == id).first()
+
+async def get_videos(db: Session) -> List[models.Video]:
+    return db.query(models.Video).all()
+
 async def get_only_my_videos(db: Session, user_id) -> List[models.Video]:
-    return db.query(models.Video).join(models.Node, models.Node.id == models.Video.id).filter(models.Node.user_id == user_id).all()
+    return db.query(models.Video).join(models.Node, models.Node.id == models.Video.node_id).filter(models.Node.user_id == user_id).all()
 
 async def get_only_user_videos(db: Session, user_id) -> List[models.Video]:
-    return db.query(models.Video).join(models.Node, models.Node.id == models.Video.id).filter(models.Node.user_id == user_id).all()
+    return db.query(models.Video).join(models.Node, models.Node.id == models.Video.node_id).filter(models.Node.user_id != user_id).all()
+
+
+async def video_update(db: Session, id: int, user_id: int, video: schemas.VideoUpdate) -> schemas.VideoReturn:
+    db_video = await get_video_by_id(db, id)
+    if not db_video:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
+    
+    if db_video.user_id != user_id:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="You are not post owner")
+    
+    update_data = video.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_video, key, value)
+
+    db.add(db_video)
+    db.commit()
+    db.refresh(db_video)
+    return db_video
 
 # post comment
 async def post_object_comment(db: Session, comment: schemas.ObjectCommentCreate, user_id):

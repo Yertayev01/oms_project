@@ -11,6 +11,7 @@ import uuid
 from .. import models, oauth2
 from datetime import datetime
 from uuid import uuid4
+from ..config import settings
 
 
 timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -21,10 +22,6 @@ UPLOAD_DIR = os.path.join(BASE_DIR,"uploads")
 # Create a router instance
 router = APIRouter()
 
-OBJECTS_FOLDER = "C:/Users/USER/Desktop/anchorWorld_auth/objects"
-NODES_FOLDER = "C:/Users/USER/Desktop/anchorWorld_auth/nodes"
-QUEUE_FOLDER = "C:/Users/USER/Desktop/anchorWorld_auth/queue"
-RESULT_FOLDER = "C:/Users/USER/Desktop/anchorWorld_auth/video_results"
 
 
 
@@ -37,7 +34,7 @@ async def upload_object(
     status: str,
     file: UploadFile = File(),
     db: Session = Depends(get_db),
-    current_user: str = Depends(oauth2.require_user),
+    current_user: int = Depends(oauth2.require_user),
     ):
     try:
         
@@ -50,7 +47,7 @@ async def upload_object(
 
         object_file_name = os.path.basename(file.filename)
 
-        object_folder_path = os.path.join(OBJECTS_FOLDER, current_date, object_uuid) # Create a folder to save the files
+        object_folder_path = os.path.join(settings.objects_folder, current_date, object_uuid) # Create a folder to save the files
         os.makedirs(object_folder_path, exist_ok=True)
 
         object_records = []  # Save uploaded files to the folder
@@ -75,7 +72,7 @@ async def upload_object(
             "object_file_path": object_file_path,
             "object_uuid": object_uuid,
             "object_file_name": object_file_name,
-            "file_ext": file_ext, 
+            "conversion_status": '2',  
             "user_id": user_id
         }
 
@@ -97,7 +94,7 @@ async def upload_object(
 async def upload_anchor(
     file: UploadFile = File(),
     db: Session = Depends(get_db),
-    current_user: str = Depends(oauth2.require_user)
+    current_user: int = Depends(oauth2.require_user)
 ):
     try:
         user_id = current_user.user_id
@@ -107,7 +104,7 @@ async def upload_anchor(
 
         node_json_name = os.path.basename(file.filename)
 
-        node_file_path = os.path.join(NODES_FOLDER, current_date, node_json_uuid)
+        node_file_path = os.path.join(settings.nodes_folder, current_date, node_json_uuid)
         os.makedirs(node_file_path, exist_ok=True)
 
         # Modify node_json_path to desired format
@@ -162,3 +159,62 @@ async def upload_anchor(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+
+@router.post("/Video", status_code=status.HTTP_201_CREATED)
+async def upload_video(
+    title: str,
+    node_id: int,
+    file: UploadFile = File(),
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.require_user),
+    ):
+    try:
+        
+       
+        user_id = current_user.user_id  # Create a new asset in the database
+        
+        video_uuid = uuid.uuid4().hex # Generate a UUID for the asset
+        
+        current_date = str(datetime.now().strftime("%Y-%m-%d")) # Generate the current date as string
+
+        video_file_name = os.path.basename(file.filename)
+
+        video_folder_path = os.path.join(settings.video_folder, current_date, video_uuid) # Create a folder to save the files
+        os.makedirs(video_folder_path, exist_ok=True)
+
+        video_records = []  # Save uploaded files to the folder
+        
+        pth = video_folder_path.replace("\\", "/")
+        sub_pth = pth.split("/")
+        final_pth = f'{sub_pth[len(sub_pth)-2]}/{sub_pth[len(sub_pth)-1]}'
+        video_file_path = os.path.join(final_pth)
+
+        #fileUpload_file_size = os.path.getsize(os.path.join(fileUpload_folder_path, file.filename))
+
+        _, file_ext = os.path.splitext(file.filename)
+
+        with open(f"{os.path.join(video_folder_path, file.filename)}", "wb") as file_obj:
+            file_obj.write(file.file.read())
+
+        video = {
+            "video_title": title, 
+            "video_file_path": video_file_path,
+            "video_uuid": video_uuid,
+            "video_file_name": video_file_name,
+            "node_id": node_id,
+        }
+
+        
+        new_video= models.Video(**video)
+        video_records.append(new_video)
+
+        # Add all file upload records to the database
+        db.add_all(video_records)
+        db.commit()
+        
+        return video_records[0].id
+    except Exception as e:
+        db.rollback()
+        # Handle the exception (e.g., log the error)
+        raise

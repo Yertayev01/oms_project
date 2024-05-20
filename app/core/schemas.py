@@ -48,8 +48,8 @@ class UserCreate(BaseModel):
     password: str
     socialKind: str
     phone_number: int
-    latitude: str
-    longitude: str
+    latitude: float
+    longitude: float
     self_intro: Optional[str] = None
     #photos: PhotoReturn
 
@@ -103,18 +103,17 @@ class Object(BaseModel):
 #anchor
 class AnchorList(BaseModel):
     anchor_title: str
-    latitude: str
-    longitude: str
+    latitude: float
+    longitude: float
 
 class AnchorNearByMe(BaseModel):
     anchor_title: str
-    latitude: str
-    longitude: str
+    latitude: float
+    longitude: float
 
 #video
 class VideoReturn(BaseModel):
     id: int
-    user_id: int
     video_title: str
     reg_dt: datetime
     mod_dt: datetime
@@ -122,6 +121,11 @@ class VideoReturn(BaseModel):
     
     class ConfigDict:
         from_attributes = True
+
+
+class VideoUpdate(BaseModel):
+    video_title: t.Optional[str] = None
+    
 
 
 #comment
@@ -242,7 +246,8 @@ class ObjectReturn(BaseModel):
     object_description: str
     reg_dt: datetime
     mod_dt: datetime
-    comments: t.List[ObjectCommentReturn]
+    #comments: t.List[ObjectCommentReturn]
+    json_file: bytes
     
     class ConfigDict:
         from_attributes = True
@@ -260,8 +265,8 @@ class NodesReturn(BaseModel):
     object_id: int
     node_title: str
     node_description: str
-    latitude: str
-    longitude: str
+    latitude: float
+    longitude: float
 
     class ConfigDict:
         from_attributes = True
@@ -272,8 +277,8 @@ class NodeReturn(BaseModel):
     object_id: int
     node_title: str
     node_description: str
-    latitude: str
-    longitude: str
+    latitude: float
+    longitude: float
     reg_dt: datetime
     mod_dt: datetime
     #comments: t.List[NodeCommentReturn]
@@ -282,6 +287,22 @@ class NodeReturn(BaseModel):
     class ConfigDict:
         from_attributes = True
 
+from pydantic import BaseModel
+
+
+class NodeSearchRequest(BaseModel):
+    latitude: float
+    longitude: float
+
+
+class SearchNode(BaseModel):
+    id: int
+    latitude: float
+    longitude: float
+    distance: float
+
+    class Config:
+        from_attributes = True
 #follow
 class FollowList(BaseModel):
     user_id: int

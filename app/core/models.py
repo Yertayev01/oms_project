@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer,  String, ForeignKey, DateTime, Boolean, BigInteger
+from sqlalchemy import Column, Integer,  String, ForeignKey, DateTime, Boolean, BigInteger, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -18,8 +18,8 @@ class User(Base):
     self_intro = Column(String(256), nullable=True)
     is_admin = Column(Boolean, nullable=False, default=False)
 
-    latitude = Column(String(256), nullable=False)
-    longitude = Column(String(256), nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
 
     login_dt = Column(DateTime, server_default=func.now())
     reg_dt = Column(DateTime, server_default=func.now())  
@@ -77,8 +77,8 @@ class Node(Base):
     user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"))
     owner = relationship("User", cascade="all,delete", back_populates="nodes")
 
-    latitude = Column(String(256), nullable=False)
-    longitude = Column(String(256), nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
 
     #anchor_id = Column(String(256), nullable=False) 
     # anchor_id = Column(Integer, ForeignKey("anchors.id", ondelete="CASCADE"))
@@ -88,7 +88,7 @@ class Node(Base):
     # object_id = Column(Integer, ForeignKey("objects.id", ondelete="CASCADE"))
     # parentObject = relationship("Object", back_populates="nodes")
 
-    node_title = Column(String(256), unique=True, nullable=False)
+    node_title = Column(String(256), nullable=False)
     node_description = Column(String(256), nullable=True)
     status = Column(String(256), nullable=False)
     node_json_path = Column(String(256), nullable=False)
@@ -134,11 +134,11 @@ class Anchor(Base):
    
     #nodes = relationship("Node", cascade="all,delete", back_populates="parentAnchor")
 
-    anchor_title = Column(String(256), unique=True, nullable=False)
+    anchor_title = Column(String(256), nullable=False)
     status = Column(String(256), nullable=False)
 
-    latitude = Column(String(256), nullable=False)
-    longitude = Column(String(256), nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
 
     reg_dt = Column(DateTime, server_default=func.now()) 
     mod_dt = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -164,18 +164,18 @@ class Object(Base):
     object_files = relationship("ObjectFile", cascade="delete", back_populates="object")
     #titles = relationship("ObjectTitle", cascade="all,delete", back_populates="parent")
 
-    object_title = Column(String(256), unique=True, nullable=False)
+    object_title = Column(String(256), nullable=False)
     object_description = Column(String(256), nullable=True)
     
     object_type = Column(String(256), nullable=False)
-    file_ext = Column(String(256), nullable=False)
+    #file_ext = Column(String(256), nullable=False)
     status = Column(String(256), nullable=False)
     conversion_status = Column(String(10), default=0)
     #conversion_type = Column(String(10), nullable=True)
 
     object_uuid = Column(String(256), nullable=False)
-    object_file_path = Column(String(256), nullable=False)
-    object_file_name = Column(String(256), nullable=False)
+    object_file_path = Column(String(256), nullable=True)
+    object_file_name = Column(String(256), nullable=True)
     object_thumb_name = Column(String(256), nullable=True)
 
     reg_dt = Column(DateTime, server_default=func.now()) 
@@ -230,7 +230,7 @@ class Video(Base):
     video_uuid = Column(String(256), nullable=False)
     video_file_path = Column(String(256), nullable=False)
     video_file_name = Column(String(256), nullable=False)
-    video_thumb_name = Column(String(256), nullable=False)
+    video_thumb_name = Column(String(256), nullable=True)
 
     reg_dt = Column(DateTime, server_default=func.now()) 
     mod_dt = Column(DateTime, server_default=func.now(), onupdate=func.now())

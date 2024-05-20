@@ -17,7 +17,7 @@ git add README.md
 git commit -m "first commit" 
 git branch -M main 
 git remote add origin https://github.com/Yertayev01/a.git 
-git push -u origin main
+git push -u origin main 
 
 #GITHUB pull 
 git remote -v 
@@ -37,6 +37,9 @@ git merge origin/<branch_name>
 # 8. alembic revision -m "create tablename table"
 # 9. fill up functions in a version file in alembic and then run to update -> alembic upgrade "revision_name"
 # 10. to cancel last update and rollback -> alembic downgrade "revision name"
+
+# alembic revision --autogenerate -m "comment"
+# alembic upgrade heads
 
 #NGINX REVERSE PROXY SERVER
 # 1. CREATE NGINX file to source folder

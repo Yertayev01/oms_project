@@ -193,7 +193,7 @@ async def token(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Ses
     access_token = await oauth2.create_access_token(data={"user_id": user.first().user_id})
 
     # Update user's last_login time in database
-    user.update({"reg_dt": datetime.now()}, synchronize_session = False)
+    user.update({"reg_dt": datetime.now()}, synchronize_Session = False)
     db.commit()
 
     # Return access token
