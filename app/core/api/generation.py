@@ -92,7 +92,7 @@ async def generate_object(
                 "object_uuid": fileUpload_uuid,
         }
         
-        new_object = models.Object(**object)
+        new_object = models.AssetStore(**object)
         db.add(new_object)
         db.commit()
 

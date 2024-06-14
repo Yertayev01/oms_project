@@ -4,39 +4,46 @@ from typing import List
 
 from app.core import models, schemas, utils
 from sqlalchemy import func
+import math
+from sqlalchemy import and_
+import re
 #from app.core.utils import hash_password
 
 #user
-async def get_user_by_id(db: Session, user_id: int) -> models.User:
-    return db.query(models.User).filter(models.User.user_id == user_id).first()
+async def get_user_by_id(db: Session, user_id: str) -> models.User:
+    return db.query(models.User).filter(models.User.USER_ID == user_id).first()
 
 async def get_user_by_username(db: Session, username: str) -> models.User:
-    return db.query(models.User).filter(models.User.username == username).first()
+    return db.query(models.User).filter(models.User.USER_NM == username).first()
 
 async def get_users(db: Session) -> List[models.User]:
     return db.query(models.User).all()
 
 async def get_user_by_username(db: Session, username: str) -> models.User:
-    return db.query(models.User).filter(models.User.username == username).first()
+    return db.query(models.User).filter(models.User.USER_NM == username).first()
 
 async def get_user_by_email(db: Session, email: str) -> models.User:
-    return db.query(models.User).filter(models.User.email == email).first()
+    return db.query(models.User).filter(models.User.EMAIL == email).first()
 
 async def user_create(db: Session, user: schemas.UserCreate) -> models.User:
     # Check if email exists
-    existing_email = await get_user_by_email(db, user.email)
+    existing_email = await get_user_by_email(db, user.EMAIL)
     if existing_email:
-        raise HTTPException(detail=f"Email {user.email} is already registered", status_code=status.HTTP_409_CONFLICT)
+        raise HTTPException(detail=f"Email {user.EMAIL} is already registered", status_code=status.HTTP_409_CONFLICT)
 
     # Check if username exists
-    existing_username = await get_user_by_username(db, user.username)
+    existing_username = await get_user_by_username(db, user.USER_NM)
     if existing_username:
-        raise HTTPException(detail=f"Username {user.username} is already taken", status_code=status.HTTP_409_CONFLICT)
+        raise HTTPException(detail=f"Username {user.USER_NM} is already taken", status_code=status.HTTP_409_CONFLICT)
     
-    user.password = await utils.hash_password(user.password)
+    user.PSSWRD = await utils.hash_password(user.PSSWRD)
     db_user = models.User(
         **user.dict(),
     )
+
+    user.REG_USER_ID = user.USER_ID
+    user.MOD_USER_ID = user.USER_ID
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -78,67 +85,79 @@ async def photo_create(db: Session, photo: schemas.PhotoCreate):
     db.refresh(photo)
     return photo
 
-#object
-async def get_object_by_id(db: Session, id: int):
-    return db.query(models.Object).filter(
-        models.Object.id == id,
-        models.Object.conversion_status == '2'
-        ).first()
+#asset
+async def get_asset_by_id(db: Session, id: str):
+    return db.query(
+        models.FileMaster.NERF_FILE_PATH,
+        models.FileModel.CHNG_FILE_NM,
+    ).join(
+        models.FileModel, models.FileModel.FILE_UUID == models.FileMaster.FILE_UUID,
+    ).filter(
+        models.FileMaster.FILE_UUID == id
+    ).first()
 
-async def get_objects(db: Session) -> List[models.Object]:
-    return db.query(models.Object).filter(models.Object.conversion_status == '2').all()
+async def get_objects(db: Session) -> List[models.AssetStore]:
+    #return db.query(models.AssetStore).filter(models.AssetStore.conversion_status == '2').all()
+    return db.query(models.AssetStore).all()
 
-async def get_only_my_objects(db: Session, user_id: int, object_type: str) -> List[models.Object]:
-    return db.query(models.Object).filter(
-        models.Object.user_id == user_id,
-        models.Object.object_type == object_type,
-        models.Object.conversion_status == '2'
+async def get_only_my_objects(db: Session, user_id: str, asset_type: str) -> List[models.AssetStore]:
+    return db.query(models.AssetStore).filter(
+        models.AssetStore.USER_MNG_ID == user_id,
+        models.AssetStore.ASSET_TYPE == asset_type,
+        #models.AssetStore.conversion_status == '2'
     ).all()
 
-async def get_only_user_objects(db: Session, user_id: int, object_type: str) -> List[models.Object]:
-    return db.query(models.Object).filter(
-        models.Object.object_type == object_type,
-        models.Object.conversion_status == '2',
-        models.Object.user_id != user_id
+async def get_only_user_objects(db: Session, user_id: int, asset_type: str) -> List[models.AssetStore]:
+    return db.query(models.AssetStore).filter(
+        models.AssetStore.ASSET_TYPE == asset_type,
+        #models.AssetStore.conversion_status == '2',
+        models.AssetStore.USER_MNG_ID != user_id
     ).all()
 
-async def object_update(db: Session, id: int, user_id: int, object: schemas.ObjectUpdate) -> schemas.ObjectReturn:
-    db_object = await get_object_by_id(db, id)
-    if not db_object:
+async def object_update(db: Session, id: str, user_id: int, object: schemas.AssetUpdate) -> schemas.AssetReturn:
+    db_asset = await get_asset_by_id(db, id)
+    if not db_asset:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
     
-    if db_object.user_id != user_id:
+    if db_asset.USER_MNG_ID != user_id:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="You are not post owner")
     
     update_data = object.dict(exclude_unset=True)
     for key, value in update_data.items():
-        setattr(db_object, key, value)
+        setattr(db_asset, key, value)
 
-    db.add(db_object)
+    db.add(db_asset)
     db.commit()
-    db.refresh(db_object)
-    return db_object
+    db.refresh(db_asset)
+    return db_asset
 
 #node
-async def get_node_by_id(db: Session, id: int):
-    return db.query(models.Node).filter(models.Node.id == id).first()
+async def get_node_by_id(db: Session, id: str):
+    return db.query(models.NodeStore).filter(models.NodeStore.NODE_ID == id).first()
 
-async def get_nodes(db: Session) -> List[models.Node]:
-    return db.query(models.Node).all()
+async def get_nodes(db: Session) -> List[models.NodeStore]:
+    return db.query(models.NodeStore).all()
 
-async def get_only_my_nodes(db: Session, user_id: int) -> List[models.Node]:
-    return db.query(models.Node).filter(models.Node.user_id == user_id).all()
+async def get_only_my_nodes(db: Session, user_id: str) -> List[models.NodeStore]:
+    return db.query(models.NodeStore).filter(models.NodeStore.USER_MNG_ID == user_id).all()
 
-async def get_only_user_nodes(db: Session, user_id: int) -> List[models.Node]:
-    return db.query(models.Node).filter(models.Node.user_id != user_id).all()
+async def search_nodes_by_title(db: Session, user_id: str, title: str) -> List[models.NodeStore]:
+    return  db.query(models.NodeStore).filter(
+        and_(
+            models.NodeStore.NODE_TITLE.ilike(f'%{title}%')
+        )
+    ).all()
 
-async def node_update(db: Session, id: int, user_id: int, node: schemas.NodeUpdate) -> schemas.NodeReturn:
+async def get_only_user_nodes(db: Session, user_id: str) -> List[models.NodeStore]:
+    return db.query(models.NodeStore).filter(models.NodeStore.USER_MNG_ID != user_id).all()
+
+async def node_update(db: Session, id: int, user_id: str, node: schemas.NodeUpdate) -> schemas.UpdatedNode:
     db_node = await get_node_by_id(db, id)
     if not db_node:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Node not found")
     
-    if db_node.user_id != user_id:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="You are not post owner")
+    if db_node.USER_MNG_ID != user_id:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="You are not the node owner")
     
     update_data = node.dict(exclude_unset=True)
     for key, value in update_data.items():
@@ -150,11 +169,8 @@ async def node_update(db: Session, id: int, user_id: int, node: schemas.NodeUpda
     return db_node
 
 
-
 async def get_nodes_on_map(db: Session, latitude: float, longitude: float) -> List[dict]:
     
-    import math
-
     def calculate_distance(lat1, lon1, lat2, lon2):
         R = 6371000  # Earth radius in meters
         phi1 = math.radians(lat1)
@@ -165,35 +181,67 @@ async def get_nodes_on_map(db: Session, latitude: float, longitude: float) -> Li
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         return R * c
     
-    nodes = db.query(models.Node).all()
+    nodes = db.query(models.NodeStore).all()
     nodes_with_distance = [
-        (node, calculate_distance(latitude, longitude, node.latitude, node.longitude))
+        (node, calculate_distance(latitude, longitude, node.LATITUDE, node.LONGITUDE))
         for node in nodes
     ]
     nodes_with_distance.sort(key=lambda x: x[1])
     return [{'node': node, 'distance': distance} for node, distance in nodes_with_distance]
 
+
+#anchor
+async def get_anchors_on_map(db: Session, latitude: float, longitude: float) -> List[dict]:
+    
+    def calculate_distance(lat1, lon1, lat2, lon2):
+        R = 6371000  # Earth radius in meters
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2)
+        delta_phi = math.radians(lat2 - lat1)
+        delta_lambda = math.radians(lon2 - lon1)
+        a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
+    
+    anchors = db.query(models.AnchorStore).all()
+    anchors_with_distance = [
+        (anchor, calculate_distance(latitude, longitude, anchor.LATITUDE, anchor.LONGITUDE))
+        for anchor in anchors
+    ]
+    anchors_with_distance.sort(key=lambda x: x[1])
+    return [{'anchor': anchor, 'distance': distance} for anchor, distance in anchors_with_distance]
+
 #video
 
-async def get_video_by_id(db: Session, id: int):
-    return db.query(models.Video).filter(models.Video.id == id).first()
+async def get_video_by_id(db: Session, id: str):
+    return db.query(
+            models.VideoStore.VIDEO_FILE_PATH,
+            models.VideoStore.VIDEO_FILE_NAME,
+        ).filter(
+            models.VideoStore.VIDEO_ID == id).first()
 
-async def get_videos(db: Session) -> List[models.Video]:
-    return db.query(models.Video).all()
+async def get_videos(db: Session) -> List[models.VideoStore]:
+    return db.query(models.VideoStore).all()
 
-async def get_only_my_videos(db: Session, user_id) -> List[models.Video]:
-    return db.query(models.Video).join(models.Node, models.Node.id == models.Video.node_id).filter(models.Node.user_id == user_id).all()
+async def get_only_my_videos(db: Session, user_id) -> List[models.VideoStore]:
+    return db.query(models.VideoStore).join(models.NodeStore, models.NodeStore.NODE_ID == models.VideoStore.NODE_ID).filter(models.NodeStore.USER_MNG_ID == user_id).all()
 
-async def get_only_user_videos(db: Session, user_id) -> List[models.Video]:
-    return db.query(models.Video).join(models.Node, models.Node.id == models.Video.node_id).filter(models.Node.user_id != user_id).all()
+async def get_only_user_videos(db: Session, user_id) -> List[models.VideoStore]:
+    return db.query(models.VideoStore).join(models.NodeStore, models.NodeStore.NODE_ID == models.VideoStore.NODE_ID).filter(models.NodeStore.USER_MNG_ID != user_id).all()
 
+
+async def update_video_by_id(db: Session, id: str):
+    return db.query(
+            models.VideoStore
+        ).filter(
+            models.VideoStore.VIDEO_ID == id).first()
 
 async def video_update(db: Session, id: int, user_id: int, video: schemas.VideoUpdate) -> schemas.VideoReturn:
-    db_video = await get_video_by_id(db, id)
+    db_video = await update_video_by_id(db, id)
     if not db_video:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
     
-    if db_video.user_id != user_id:
+    if db_video.USER_MNG_ID != user_id:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="You are not post owner")
     
     update_data = video.dict(exclude_unset=True)
@@ -207,7 +255,7 @@ async def video_update(db: Session, id: int, user_id: int, video: schemas.VideoU
 
 # post comment
 async def post_object_comment(db: Session, comment: schemas.ObjectCommentCreate, user_id):
-    comment = models.ObjectComment(
+    comment = models.AssetComments(
             **comment.dict(), user_id = user_id
     )
     db.add(comment)
@@ -217,7 +265,7 @@ async def post_object_comment(db: Session, comment: schemas.ObjectCommentCreate,
 
 
 async def post_node_comment(db: Session, comment: schemas.NodeCommentCreate, user_id):
-    comment = models.NodeComment(
+    comment = models.NodeComments(
             **comment.dict(), user_id = user_id
     )
     db.add(comment)
@@ -227,7 +275,7 @@ async def post_node_comment(db: Session, comment: schemas.NodeCommentCreate, use
 
 #post like
 async def post_object_like(db: Session, like: schemas.ObjectLikeCreate, user_id):
-    like = models.ObjectLike(
+    like = models.AssetLikes(
             **like.dict(), user_id = user_id
     )
     db.add(like)
@@ -236,7 +284,7 @@ async def post_object_like(db: Session, like: schemas.ObjectLikeCreate, user_id)
     return like
 
 async def post_node_like(db: Session, like: schemas.NodeLikeCreate, user_id):
-    like = models.NodeLike(
+    like = models.NodeLikes(
             **like.dict(), user_id = user_id
     )
     db.add(like)
@@ -247,7 +295,7 @@ async def post_node_like(db: Session, like: schemas.NodeLikeCreate, user_id):
 
 #post save
 async def post_object_save(db: Session, save: schemas.ObjectSaveCreate, user_id):
-    save = models.ObjectSave(
+    save = models.AssetSaves(
             **save.dict(), user_id = user_id
     )
     db.add(save)
@@ -256,7 +304,7 @@ async def post_object_save(db: Session, save: schemas.ObjectSaveCreate, user_id)
     return save
 
 async def post_node_save(db: Session, save: schemas.NodeSaveCreate, user_id):
-    save = models.NodeSave(
+    save = models.NodeSaves(
             **save.dict(), user_id = user_id
     )
     db.add(save)
@@ -266,33 +314,33 @@ async def post_node_save(db: Session, save: schemas.NodeSaveCreate, user_id):
 
 
 #get comment all
-async def get_object_comments(db: Session) -> List[models.ObjectComment]:
-    return db.query(models.ObjectComment).all()
+async def get_object_comments(db: Session) -> List[models.AssetComments]:
+    return db.query(models.AssetComments).all()
 
-async def get_node_comments(db: Session) -> List[models.NodeComment]:
-    return db.query(models.NodeComment).all()
+async def get_node_comments(db: Session) -> List[models.NodeComments]:
+    return db.query(models.NodeComments).all()
 
 #get like all
-async def get_object_likes(db: Session) -> List[models.ObjectLike]:
-    return db.query(models.ObjectLike).all()
+async def get_object_likes(db: Session) -> List[models.AssetLikes]:
+    return db.query(models.AssetLikes).all()
 
-async def get_node_likes(db: Session) -> List[models.NodeLike]:
-    return db.query(models.NodeLike).all()
+async def get_node_likes(db: Session) -> List[models.NodeLikes]:
+    return db.query(models.NodeLikes).all()
 
 #get save all
-async def get_object_saves(db: Session) -> List[models.ObjectSave]:
-    return db.query(models.ObjectLike).all()
+async def get_object_saves(db: Session) -> List[models.AssetSaves]:
+    return db.query(models.AssetLikes).all()
 
-async def get_node_saves(db: Session) -> List[models.NodeSave]:
-    return db.query(models.NodeSave).all()
+async def get_node_saves(db: Session) -> List[models.NodeSaves]:
+    return db.query(models.NodeSaves).all()
 
 
 #get one comment
 async def get_object_comment_by_id(db: Session, id: int):
-    return db.query(models.ObjectComment).filter(models.ObjectComment.id == id).first()
+    return db.query(models.AssetComments).filter(models.AssetComments.id == id).first()
 
 async def get_node_comment_by_id(db: Session, id: int):
-    return db.query(models.NodeComment).filter(models.NodeComment.id == id).first()
+    return db.query(models.NodeComments).filter(models.NodeComments.id == id).first()
 
 #update comment
 async def object_comment_update(db: Session, id: int, user_id: int, comment: schemas.ObjectCommentUpdate) -> schemas.ObjectCommentReturn:
@@ -321,15 +369,15 @@ async def node_comment_update(db: Session, id: int, user_id: int, comment: schem
 
 
 #delete comment
-async def object_comment_delete(db: Session, id: int) -> models.ObjectComment:
-    comment = await get_object_by_id(db, id)
+async def object_comment_delete(db: Session, id: int) -> models.AssetComments:
+    comment = await get_asset_by_id(db, id)
     if not comment:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="comment not found")
     db.delete(comment)
     db.commit()
     return comment
 
-async def node_comment_delete(db: Session, id: int) -> models.NodeComment:
+async def node_comment_delete(db: Session, id: int) -> models.NodeComments:
     comment = await get_node_by_id(db, id)
     if not comment:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="comment not found")
@@ -338,15 +386,15 @@ async def node_comment_delete(db: Session, id: int) -> models.NodeComment:
     return comment
 
 #delete like
-async def object_like_delete(db: Session, id: int) -> models.ObjectLike:
-    like = await get_object_by_id(db, id)
+async def object_like_delete(db: Session, id: int) -> models.AssetLikes:
+    like = await get_asset_by_id(db, id)
     if not like:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="comment not found")
     db.delete(like)
     db.commit()
     return like
 
-async def node_like_delete(db: Session, id: int) -> models.NodeLike:
+async def node_like_delete(db: Session, id: int) -> models.NodeLikes:
     like = await get_node_by_id(db, id)
     if not like:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="comment not found")
@@ -355,15 +403,15 @@ async def node_like_delete(db: Session, id: int) -> models.NodeLike:
     return like
 
 #delete save
-async def object_save_delete(db: Session, id: int) -> models.ObjectSave:
-    save = await get_object_by_id(db, id)
+async def object_save_delete(db: Session, id: int) -> models.AssetSaves:
+    save = await get_asset_by_id(db, id)
     if not save:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="comment not found")
     db.delete(save)
     db.commit()
     return save
 
-async def node_save_delete(db: Session, id: int) -> models.NodeSave:
+async def node_save_delete(db: Session, id: int) -> models.NodeSaves:
     save = await get_node_by_id(db, id)
     if not save:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="comment not found")
@@ -372,11 +420,11 @@ async def node_save_delete(db: Session, id: int) -> models.NodeSave:
     return save
 
 #follow
-async def get_follow_list(db: Session, user_id) -> List[models.Subscription]:
-    return db.query(models.Subscription).filter(user_id == user_id).all()
+async def get_follow_list(db: Session, user_id) -> List[models.FollowFriend]:
+    return db.query(models.FollowFriend).filter(user_id == user_id).all()
 
 async def follow_user(db: Session, follow: schemas.FollowUser):
-    follow = models.Subscription(
+    follow = models.FollowFriend(
         **follow.dict()
     )
     db.add(follow)

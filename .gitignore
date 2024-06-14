@@ -1,11 +1,13 @@
+../objects/
+../media_uploads/
+../nodes/
+../profile_image/
+../queue/
+../results/
+../videos/
+../anchor/
 
-media_uploads
-nodes
-objects
-profile_image
-queue
-results
-videos
+.venv
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -112,6 +114,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+venv
 env/
 venv/
 ENV/

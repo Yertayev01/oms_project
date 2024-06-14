@@ -306,3 +306,18 @@ async def check_nickname(
         #return{"message": f"The {name} name is available."}
         return True
     
+@router.get("/", response_model=t.List[schemas.NodesReturn])
+async def get_all_nodes_endpoint(
+    latitude: float = Query(..., description="User's latitude"),
+    longitude: float = Query(..., description="User's longitude"),
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(oauth2.require_user)
+    ):
+    rate_limiter(current_user.USER_MNG_ID)
+    nodes = await crud.get_nodes(db)
+    user_location = (latitude, longitude)
+    
+    # Sort nodes by distance to the user-provided location
+    sorted_nodes = sorted(nodes, key=lambda node: geodesic(user_location, (node.LATITUDE, node.LONGITUDE)).miles)
+
+    return sorted_nodes

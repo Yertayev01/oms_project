@@ -43,14 +43,15 @@ class UserBase(BaseModel):
     is_admin: t.Optional[bool] = False
   
 class UserCreate(BaseModel):
-    email: str
-    username: str
-    password: str
-    socialKind: str
-    phone_number: int
-    latitude: float
-    longitude: float
-    self_intro: Optional[str] = None
+    USER_ID: str
+    LOGI_CD: str = "N"
+    PSSWRD: str
+    USER_NM: str
+    EMAIL: str
+    PHONE_NO: int
+    REG_USER_ID: str = None
+    MOD_USER_ID: str = None
+    #self_intro: Optional[str] = None
     #photos: PhotoReturn
 
     
@@ -60,9 +61,9 @@ class UserAdminCreate(BaseModel):
     is_admin: t.Optional[bool] = False
 
 class UserReturn(BaseModel):
-    user_id: int
-    username: str
-    is_admin: t.Optional[bool] = False
+    USER_MNG_ID: int
+    EMAIL: str
+    #USCL_CD: t.Optional[bool] = False
 
     class ConfigDict:
         from_attributes = True
@@ -85,47 +86,55 @@ class UserAdminUpdate(UserBase):
     password: t.Optional[str] = None
 
 class UserLogin(BaseModel):
-    username: str
-    password: str
+    EMAIL: str
+    PSSWRD: str
 
 #object
-class ObjectList(BaseModel):
-    id: int
-    object_title: str
-    object_description: str
+class AssetList(BaseModel):
+    ASSET_ID: str
+    ASSET_TITLE: str
+    DESCRIPTION: str
     # save like comment count
 
-class Object(BaseModel):
-    id: int
-    object_title: str
-    object_description: str
+class Asset(BaseModel):
+    ASSET_ID: str
+    ASSET_TITLE: str
+    DESCRIPTION: str
 
 #anchor
 class AnchorList(BaseModel):
-    anchor_title: str
-    latitude: float
-    longitude: float
+    ANCHOR_TITLE: str
+    LATITUDE: float
+    LONGITUDE: float
 
-class AnchorNearByMe(BaseModel):
-    anchor_title: str
-    latitude: float
-    longitude: float
+class SearchAnchor(BaseModel):
+    ANCHOR_ID: str
+    USER_MNG_ID: int
+    ANCHOR_TITLE: str
+    LATITUDE: float
+    LONGITUDE: float
+    DISTANCE: float
 
 #video
 class VideoReturn(BaseModel):
-    id: int
-    video_title: str
-    reg_dt: datetime
-    mod_dt: datetime
-    #path
+    VIDEO_ID: str
+    VIDEO_TITLE: str
+    VIDEO_DESCRIPTION: str
+    REG_DT: datetime
     
+    class ConfigDict:
+        from_attributes = True
+
+class VideoFile(BaseModel):
+    video_file: str
+
     class ConfigDict:
         from_attributes = True
 
 
 class VideoUpdate(BaseModel):
-    video_title: t.Optional[str] = None
-    
+    VIDEO_TITLE: t.Optional[str] = None
+    VIDEO_DESCRIPTION: t.Optional[str] = None
 
 
 #comment
@@ -223,30 +232,22 @@ class NodeCommentUpdate(BaseModel):
 
     
 #object
-class ObjectUpdate(BaseModel):
-    object_title: t.Optional[str] = None
-    object_description: t.Optional[str] = None
+class AssetUpdate(BaseModel):
+    ASSET_TITLE: t.Optional[str] = None
+    DESCRIPTION: t.Optional[str] = None
 
 
 class ObjectsReturn(BaseModel):
-    id: int
-    user_id: int
-    object_type: str
-    object_title: str
-    object_description: str
+    ASSET_ID: str
+    USER_MNG_ID: int
+    ASSET_TYPE: str
+    ASSET_TITLE: str
+    DESCRIPTION: str
     
     class ConfigDict:
         from_attributes = True
 
-class ObjectReturn(BaseModel):
-    id: int
-    user_id: int
-    object_type: str
-    object_title: str
-    object_description: str
-    reg_dt: datetime
-    mod_dt: datetime
-    #comments: t.List[ObjectCommentReturn]
+class AssetReturn(BaseModel):
     json_file: bytes
     
     class ConfigDict:
@@ -255,34 +256,49 @@ class ObjectReturn(BaseModel):
 
 #node
 class NodeUpdate(BaseModel):
-    node_title: t.Optional[str] = None
-    node_description: t.Optional[str] = None
+    NODE_TITLE: t.Optional[str] = None
+    NODE_DESCRIPTION: t.Optional[str] = None
 
 
 class NodesReturn(BaseModel):
-    id: int
-    user_id: int
-    object_id: int
-    node_title: str
-    node_description: str
-    latitude: float
-    longitude: float
+    NODE_ID: str
+    USER_MNG_ID: int
+    ASSET_ID: str
+    NODE_TITLE: str
+    NODE_DESCRIPTION: str
+    LATITUDE: float
+    LONGITUDE: float
 
     class ConfigDict:
         from_attributes = True
 
 class NodeReturn(BaseModel):
-    id: int
-    user_id: int
-    object_id: int
-    node_title: str
-    node_description: str
-    latitude: float
-    longitude: float
-    reg_dt: datetime
-    mod_dt: datetime
+    NODE_ID: str
+    USER_MNG_ID: int
+    ASSET_ID: str
+    NODE_TITLE: str
+    NODE_DESCRIPTION: str
+    LATITUDE: float
+    LONGITUDE: float
+    REG_DT: datetime
+    MOD_DT: datetime
     #comments: t.List[NodeCommentReturn]
     json_file: bytes
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class UpdatedNode(BaseModel):
+    NODE_ID: str
+    USER_MNG_ID: int
+    ASSET_ID: str
+    NODE_TITLE: str
+    NODE_DESCRIPTION: str
+    LATITUDE: float
+    LONGITUDE: float
+    REG_DT: datetime
+    MOD_DT: datetime
 
     class ConfigDict:
         from_attributes = True
@@ -291,15 +307,19 @@ from pydantic import BaseModel
 
 
 class NodeSearchRequest(BaseModel):
-    latitude: float
-    longitude: float
+    LATITUDE: float
+    LONGITUDE: float
 
 
 class SearchNode(BaseModel):
-    id: int
-    latitude: float
-    longitude: float
-    distance: float
+    NODE_ID: str
+    USER_MNG_ID: int
+    ASSET_ID: str
+    NODE_TITLE: str
+    NODE_DESCRIPTION: str
+    LATITUDE: float
+    LONGITUDE: float
+    DISTANCE: float
 
     class Config:
         from_attributes = True

@@ -34,21 +34,21 @@ async def register(
 async def login(payload: schemas.UserLogin, response: Response, Authorize: AuthJWT = Depends(), db: Session = Depends(database.get_db)):
     # Check if the user exist
     user = db.query(models.User).filter(
-        models.User.username == payload.username).first()
+        models.User.EMAIL == payload.EMAIL).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail='Incorrect Email or Password')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail='User does not exist')
 
     # Check if the password is valid
-    if not await utils.verify_password(payload.password, user.password):
+    if not await utils.verify_password(payload.PSSWRD, user.PSSWRD):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='Incorrect Email or Password')
     # Create access token
     access_token = Authorize.create_access_token(
-        subject=str(user.user_id), expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN))
+        subject=str(user.USER_ID), expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN))
     # Create refresh token
     refresh_token = Authorize.create_refresh_token(
-        subject=str(user.user_id), expires_time=timedelta(minutes=REFRESH_TOKEN_EXPIRES_IN))
+        subject=str(user.USER_ID), expires_time=timedelta(minutes=REFRESH_TOKEN_EXPIRES_IN))
 
     # Store refresh and access tokens in cookie
     response.set_cookie('access_token', access_token, ACCESS_TOKEN_EXPIRES_IN * 60,
@@ -62,7 +62,7 @@ async def login(payload: schemas.UserLogin, response: Response, Authorize: AuthJ
 
 
 @router.get('/me', status_code=status.HTTP_200_OK, response_model=schemas.UserReturn)
-async def me(current_user: str = Depends(oauth2.require_user)):
+async def me(current_user: models.User = Depends(oauth2.require_user)):
     return current_user
 
 
@@ -80,7 +80,7 @@ async def refresh_token(response: Response, Authorize: AuthJWT = Depends(), db: 
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail='The user belonging to this token no logger exist')
         access_token = Authorize.create_access_token(
-            subject=str(user.user_id), expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN))
+            subject=str(user.USER_ID), expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRES_IN))
 
     except Exception as e:
         error = e.__class__.__name__

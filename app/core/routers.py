@@ -2,7 +2,7 @@
 # Import necessary modules from FastAPI and project-specific modules.
 from fastapi import APIRouter
 
-from .api import  upload, object, anchor, generation, comment, like, save, node, auth, swagger, follow, payment, user, video 
+from .api import  asset, upload, anchor, generation, comment, like, save, node, auth, swagger, follow, payment, user, video 
 
 # Create an API router with the prefix "/api"
 router = APIRouter(prefix="/api")
@@ -27,7 +27,7 @@ router.include_router(
 )
 
 router.include_router(
-    object.router,
+    asset.router,
     prefix="/object",
     tags=["Object"]
 )

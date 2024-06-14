@@ -8,7 +8,7 @@ app.mount("/api/avatar", StaticFiles(directory="../profile_image"), name="avatar
 # 2. python3 -m venv venv
 # 2.1(ubuntu) source venv/bin/activate
 # 3. pip install -r requirements.txt
-# 4  uvicorn app.main:app --host 0.0.0.0 --port 8010 --reload
+# 4  uvicorn app.main:app --host 0.0.0.0 --port 8011 --reload
 
 #GITHUB push 
 echo "# a" >> README.md 
@@ -57,3 +57,5 @@ git merge origin/<branch_name>
 #   openssl req -new -key private_key_p2p.key -out private_key_p2p.csr
 #   openssl req -text -in private_key_p2p.csr -noout -verify
 #   openssl x509 -in private_key_p2p.csr -out private_key_p2p.crt -req -signkey private_key_p2p.key -days 365
+
+
