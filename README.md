@@ -48,14 +48,12 @@ Follow these steps to set up and run the project locally:
 ## Docker Commands
 
 ### To Run the Application:
-
-```start
 docker-compose up --build
 
-```stop and remove
+### To Stop And Remove:
 docker-compose down
 
-```test
+### Test Swagger Documentation:
 http://localhost:8000/docs
 
 
