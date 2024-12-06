@@ -6,12 +6,22 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-class OrderStatus(enum.Enum):
-    pending = "pending"
-    confirmed = "confirmed"
-    shipped = "shipped"
-    delivered = "delivered"
-    canceled = "canceled"
+class OrderStatus:
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELED = "canceled"
+
+    @classmethod
+    def choices(cls):
+        return [
+            (cls.PENDING, "Pending"),
+            (cls.CONFIRMED, "Confirmed"),
+            (cls.SHIPPED, "Shipped"),
+            (cls.DELIVERED, "Delivered"),
+            (cls.CANCELED, "Canceled"),
+        ]
 
 class User(Base):
     __tablename__ = 'users'
@@ -38,10 +48,15 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     total_price = Column(Float)
-    status = Column(Enum(OrderStatus), default=OrderStatus.pending)
+    status = Column(String, default=OrderStatus.PENDING)
     created_at = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.status not in [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.SHIPPED, OrderStatus.DELIVERED, OrderStatus.CANCELED]:
+            raise ValueError(f"Invalid order status: {self.status}")
 
 class OrderItem(Base):
     __tablename__ = 'order_items'

@@ -53,19 +53,17 @@ class UserLogin(BaseModel):
     password: str
 
 # Order schemas
-class OrderStatus(Enum):
+class OrderStatus(str, Enum):
     pending = "pending"
     confirmed = "confirmed"
     shipped = "shipped"
     delivered = "delivered"
     canceled = "canceled"
 
-# Order schemas
 class OrderBase(BaseModel):
     total_price: float
-    status: OrderStatus  # Use the Enum directly
+    status: OrderStatus
 
-# OrderItem schemas
 class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int
@@ -78,7 +76,7 @@ class OrderCreate(OrderBase):
 
 class OrderResponse(BaseModel):
     order_id: int
-    status: OrderStatus  # This should be a string serialized version of the Enum
+    status: OrderStatus 
 
 class OrderReturn(BaseModel):
     id: int
@@ -90,28 +88,6 @@ class OrderReturn(BaseModel):
     class Config:
         orm_mode = True
         use_enum_values = True
-
-from pydantic import root_validator
-
-class OrderReturn(BaseModel):
-    id: int
-    user_id: int
-    total_price: float
-    status: OrderStatus
-    created_at: datetime
-
-    class Config:
-        orm_mode = True
-
-    @root_validator(pre=True)
-    def enum_to_str(values):
-        if isinstance(values, dict):
-            if 'status' in values and isinstance(values['status'], Enum):
-                return values['status'].value  # Or any other processing
-        elif isinstance(values, Order):
-            if isinstance(values.status, Enum):
-                return values.status.value  # Convert Enum to string
-        return values  # Return values as is if no match
 
 
 # Product schemas

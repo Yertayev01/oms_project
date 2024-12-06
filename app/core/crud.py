@@ -117,8 +117,8 @@ def place_order(db: Session, user_id: int, order_data: schemas.OrderCreate):
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to process order")
 
-    # Create order
-    order = models.Order(user_id=user_id, total_price=total_price, status=models.OrderStatus.pending, items=items)
+    # Create order with status as string
+    order = models.Order(user_id=user_id, total_price=total_price, status=order_data.status, items=items)
     db.add(order)
     db.commit()
     db.refresh(order)
@@ -148,10 +148,13 @@ def cancel_order(db: Session, order_id: int, user_id: int):
     if not order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
     
-    if order.status == models.OrderStatus.shipped:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot cancel order after it is shipped")
-    
-    order.status = models.OrderStatus.canceled
+    if order.status == models.OrderStatus.SHIPPED:
+        # Here, you could decide to handle it differently, for example, still cancel it but with a special condition
+        order.status = models.OrderStatus.CANCELED
+        db.commit()
+        return order
+
+    order.status = models.OrderStatus.CANCELED
     db.commit()
     
     return order
