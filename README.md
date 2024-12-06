@@ -48,6 +48,7 @@ Follow these steps to set up and run the project locally:
 ## Docker Commands
 
 ### To Run the Application:
+
 ```start
 docker-compose up --build
 
