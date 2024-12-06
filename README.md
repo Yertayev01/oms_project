@@ -6,20 +6,11 @@ This project implements a set of CRUD operations for managing users, orders, and
 - [Project Overview](#project-overview)
 - [Technologies Used](#technologies-used)
 - [Setup and Installation](#setup-and-installation)
-- [Running the Project](#running-the-project)
-- [API Endpoints](#api-endpoints)
-  - [User Endpoints](#user-endpoints)
-  - [Order Endpoints](#order-endpoints)
-  - [Authentication Endpoints](#authentication-endpoints)
-- [Explanation of Code](#explanation-of-code)
-  - [CRUD Operations](#crud-operations)
-  - [Order Management](#order-management)
-  - [Authentication](#authentication)
-- [License](#license)
+- [Running the Project](#docker-commands)
 
 ## Project Overview
 
-This project provides an API for managing users, products, orders, and promotions in an e-commerce platform. The backend is built using FastAPI, and it uses SQLAlchemy for ORM (Object-Relational Mapping) with a PostgreSQL database.
+This project provides an API for managing users, products, orders in a platform. The backend is built using FastAPI, and it uses SQLAlchemy for ORM (Object-Relational Mapping) with a PostgreSQL database.
 
 ## Technologies Used
 - **FastAPI**: Modern web framework for building APIs.
