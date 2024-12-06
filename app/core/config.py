@@ -10,12 +10,6 @@ class Settings(BaseSettings):
     database_name: str
     database_username: str
 
-    test_database_hostname: str
-    test_database_port: str
-    test_database_password: str
-    test_database_name: str
-    test_database_username: str
-
     admin_username: str
     admin_password: str
 
@@ -30,36 +24,17 @@ class Settings(BaseSettings):
 
     swagger_username: str
     swagger_password: str
-
-    objects_folder: str
-    nodes_folder: str
-    queue_folder: str
-    result_folder: str
-    files_folder: str
-    video_folder: str
-    profile_image_folder: str
-
     # Define the Config inner class with the path to the environment file
     class Config:
         env_file = ".env"
 
 # Create an instance of the Settings class
 settings = Settings(
-    database_hostname="220.76.95.197",
-    database_username="root",
-    database_password="12345678",
-    database_name="3dassetsdb2",
-    database_port="3306",
-    # database_hostname="localhost",
-    # database_username="postgres",
-    # database_password="postgres",
-    # database_name="anchorworld",
-    # database_port="5432",
-    test_database_username="root",
-    test_database_password="root",
-    test_database_port="3306",
-    test_database_name="3dassetsdb2_test",
-    test_database_hostname="localhost",
+    database_hostname="localhost",
+    database_username="postgres",
+    database_password="postgres",
+    database_name="oms_project",
+    database_port="5432",
     admin_username="admin",
     admin_password="admin",
     secret_key="cd67cdf09d9dc368960d7590e143b0d55c15f2d0da56b314b4a08a54aeca9b4b",
@@ -71,14 +46,6 @@ settings = Settings(
     jwt_public_key="LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZ3d0RRWUpLb1pJaHZjTkFRRUJCUUFEU3dBd1NBSkJBSSs3QnZUS0FWdHVQYzEzbEFkVk94TlVmcWxzMm1SVgppUFpSclRaY3d5eEVYVURqTWhWbi9KVHRsd3h2a281T0pBQ1k3dVE0T09wODdiM3NOU3ZNd2xNQ0F3RUFBUT09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQ==",
     swagger_username="swagger_user",
     swagger_password="swagger_password",
-
-    objects_folder="C:/Users/USER/Desktop/anchorWorld_p2p/objects",
-    nodes_folder="C:/Users/USER/Desktop/anchorWorld_p2p/nodes",
-    queue_folder="C:/Users/USER/Desktop/anchorWorld_p2p/queue",
-    result_folder="C:/Users/USER/Desktop/anchorWorld_p2p/results",
-    files_folder="C:/Users/USER/Desktop/anchorWorld_p2p/media_uploads",
-    video_folder="C:/Users/USER/Desktop/anchorWorld_p2p/videos",
-    profile_image_folder="C:/Users/USER/Desktop/anchorWorld_p2p/profile_image",
 )
 
 swagger_login_page = """

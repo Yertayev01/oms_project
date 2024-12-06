@@ -15,12 +15,6 @@ app = FastAPI()
 # Include the router defined in the `routers` module in the app.
 app.include_router(routers.router)
 
-# Conditionally mount static directories based on environment
-if os.getenv("ENV") != "TEST":
-    app.mount("/api/static", StaticFiles(directory="../results"), name="static")
-    app.mount("/api/avatar", StaticFiles(directory="../profile_image"), name="avatar")
-    app.mount("/api/json", StaticFiles(directory="../nodes"), name="json")
-
 # Set the allowed origins for CORS requests.
 origins = [
     "*"
@@ -38,19 +32,32 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     db = database.SessionLocal()
-    user = db.query(models.User).filter(models.User.USER_NM == config.settings.admin_username).first()
     try:
+        # Retrieve the admin user from the database
+        user = db.query(models.User).filter(models.User.name == config.settings.admin_username).first()
+        
         if not user:
-            user = models.User(username=config.settings.admin_username, password=await utils.hash_password(config.settings.admin_password), is_admin=True)
+            # If the admin user doesn't exist, create a new user
+            user = models.User(
+                name=config.settings.admin_username,
+                password=await utils.hash_password(config.settings.admin_password),
+                is_admin=True,
+            )
         else:
-            user.USER_NM = config.settings.admin_username
-            user.PSSWRD = await utils.hash_password(config.settings.admin_password)
-            user.USCL_CD = "USCL0001"
+            # If the admin user exists, update their username and password
+            user.name = config.settings.admin_username
+            user.password = await utils.hash_password(config.settings.admin_password)
+        
         db.add(user)
         db.commit()
         db.refresh(user)
-    except:
+    except Exception as e:
+        # Close the database session in case of any error
         db.close()
+        raise e
+    finally:
+        db.close()
+
 
 # Define an endpoint for retrieving the OpenAPI specification document.
 @app.get("/openapi.json", include_in_schema=False)

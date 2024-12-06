@@ -36,8 +36,8 @@ class UserIsNotAdmin(Exception):
 async def require_user(db: Session = Depends(database.get_db), Authorize: AuthJWT = Depends()):
     try:
         Authorize.jwt_required()
-        user_id = Authorize.get_jwt_subject()
-        user = await get_user_by_id(db, user_id)
+        id = Authorize.get_jwt_subject()
+        user = await get_user_by_id(db, id)
         if not user:
             credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
@@ -61,8 +61,8 @@ async def require_user(db: Session = Depends(database.get_db), Authorize: AuthJW
 async def require_admin(db: Session = Depends(database.get_db), Authorize: AuthJWT = Depends()):
     try:
         Authorize.jwt_required()
-        user_id = Authorize.get_jwt_subject()
-        user = await get_user_by_id(db, user_id)
+        id = Authorize.get_jwt_subject()
+        user = await get_user_by_id(db, id)
         if not user:
             credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
